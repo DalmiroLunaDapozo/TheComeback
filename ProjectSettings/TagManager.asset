@@ -9,6 +9,8 @@ TagManager:
   - Platform
   - Obstacle
   - Ragdoll
+  - Wall
+  - sphereMask
   layers:
   - Default
   - TransparentFX
@@ -19,7 +21,7 @@ TagManager:
   - Player
   - Camera
   - IgnoreNavMesh
-  - 
+  - sphereMask
   - 
   - 
   - 
