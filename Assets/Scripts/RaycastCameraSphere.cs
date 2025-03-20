@@ -24,11 +24,11 @@ public class RaycastCameraSphere : MonoBehaviour
         {
             if (hit.collider.gameObject.tag == "sphereMask")
             {
-                target.transform.DOScale(0, 2);
+                target.transform.DOScale(0, 4);
             }
             else
             {
-                target.transform.DOScale(2, 2);
+                target.transform.DOScale(2, 1);
             }
         }
     }

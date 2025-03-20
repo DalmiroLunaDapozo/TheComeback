@@ -117,12 +117,13 @@ public class PlayerMovement : MonoBehaviour
             landingTimer = landingDuration;
             jumpStartTime = 0f;
             lastAirTime = 0f;
+            // Force a slight downward movement to snap the character to the ground.
+            controller.Move(Vector3.down * 0.2f);
         }
 
-        // Gravity accumulation: Always apply full gravity regardless of movement.
+        // Gravity accumulation.
         if (isGrounded)
         {
-            // When grounded, a slight downward force.
             playerVelocity.y = -0.1f;
         }
         else
@@ -151,12 +152,6 @@ public class PlayerMovement : MonoBehaviour
         animator.SetLayerWeight(1, currentWeightAim);
 
         wasGrounded = isGrounded;
-
-        // Restore step offset when grounded.
-        if (isGrounded)
-        {
-            controller.stepOffset = originalStepOffset;
-        }
     }
 
     private void LateUpdate()
@@ -180,13 +175,13 @@ public class PlayerMovement : MonoBehaviour
             jumpButtonHeld = true;
             wasHighJump = false;
 
-            // Ensure velocity is completely reset when grounded before jumping.
+            // Reset velocity when grounded before jumping.
             if (isGrounded)
             {
                 playerVelocity = Vector3.zero;
             }
 
-            // Explicitly clamp jump height force.
+            // Calculate jump force.
             float jumpForceValue = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
             jumpForceValue = Mathf.Clamp(jumpForceValue, 0, Mathf.Abs(gravityValue) * 0.5f);
             playerVelocity.y = jumpForceValue;
@@ -211,15 +206,15 @@ public class PlayerMovement : MonoBehaviour
     private bool IsGrounded()
     {
         Vector3 baseOrigin = transform.position + Vector3.up * 0.1f;
-        int groundLayerMask = ~LayerMask.GetMask("Player", "Enemies"); // Ignore enemy layer
+        int groundLayerMask = ~LayerMask.GetMask("Player", "Enemies");
 
         Vector3[] offsets = new Vector3[]
         {
-        Vector3.zero,
-        new Vector3(controller.radius, 0, 0),
-        new Vector3(-controller.radius, 0, 0),
-        new Vector3(0, 0, controller.radius),
-        new Vector3(0, 0, -controller.radius)
+            Vector3.zero,
+            new Vector3(controller.radius, 0, 0),
+            new Vector3(-controller.radius, 0, 0),
+            new Vector3(0, 0, controller.radius),
+            new Vector3(0, 0, -controller.radius)
         };
 
         int hitCount = 0;
@@ -263,19 +258,17 @@ public class PlayerMovement : MonoBehaviour
 
             float speedMultiplier = isAiming ? aimingSpeedMultiplier : 1f;
 
-            // **Determine the angle between movement direction and aiming direction**
+            // Determine the angle between movement direction and aiming direction.
             Vector3 aimDirection = GetAimDirection();
-            float dotProduct = Vector3.Dot(worldMoveDirection, aimDirection); // Measures alignment (-1 to 1)
-
-            if (dotProduct > 0.7f) // If movement is mostly in the direction of aim
+            float dotProduct = Vector3.Dot(worldMoveDirection, aimDirection);
+            if (dotProduct > 0.7f)
             {
-                speedMultiplier *= forwardBoostMultiplier; // Apply speed boost
+                speedMultiplier *= forwardBoostMultiplier;
             }
 
             movementVelocity = worldMoveDirection * playerSpeed * speedMultiplier;
         }
 
-        // Apply movement
         controller.Move(movementVelocity * Time.deltaTime);
         controller.Move(playerVelocity * Time.deltaTime);
     }
@@ -294,10 +287,9 @@ public class PlayerMovement : MonoBehaviour
 
     public Vector3 GetAimDirection()
     {
-        // Use GetMouseWorldPosition but subtract player's position and ignore Y.
         Vector3 targetPoint = GetMouseWorldPosition();
         Vector3 direction = targetPoint - transform.position;
-        direction.y = 0; // Force horizontal
+        direction.y = 0;
         return direction.sqrMagnitude > 0.001f ? direction.normalized : transform.forward;
     }
 
@@ -309,6 +301,7 @@ public class PlayerMovement : MonoBehaviour
             return ray.GetPoint(rayDistance);
         return transform.position;
     }
+
 
     private void UpdateAnimator()
     {
